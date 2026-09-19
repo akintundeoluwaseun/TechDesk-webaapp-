@@ -12,13 +12,10 @@ import {
   Monitor,
   ChevronLeft,
   ChevronRight,
-  ShieldAlert,
-  ShieldCheck,
 } from "lucide-react";
 import { useThemeTokens } from "../lib/ThemeContext";
 import { useAuth, canAccess } from "../lib/AuthContext";
 import { useSettings } from "../lib/SettingsContext";
-import { useLicense } from "../lib/LicenseContext";
 
 const NAV_ITEMS_BASE = [
   { to: "/", label: "Dashboard", icon: LayoutGrid, end: true },
@@ -31,12 +28,10 @@ const NAV_ITEMS_BASE = [
   { to: "/settings", label: "Settings", icon: Settings },
 ];
 
-export default function Sidebar({ onOpenActivation }) {
+export default function Sidebar() {
   const t = useThemeTokens();
   const { settings } = useSettings();
   const { user } = useAuth();
-  const { activated, restricted, daysLeft } = useLicense();
-  const trialLabel = `Trial: ${daysLeft} day${daysLeft === 1 ? "" : "s"} left`;
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem("techdesk_sidebar_collapsed") === "1");
 
   function toggleCollapsed() {
@@ -115,19 +110,6 @@ export default function Sidebar({ onOpenActivation }) {
       </div>
 
       <div className="flex flex-col gap-2">
-        {!activated && (
-          <button
-            onClick={onOpenActivation}
-            title={collapsed ? (restricted ? "Activate" : trialLabel) : undefined}
-            className={`flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold ${
-              restricted ? "bg-red-500 text-white animate-pulse" : t.dark ? "bg-white text-slate-900" : "bg-slate-900 text-white"
-            }`}
-          >
-            {restricted ? <ShieldAlert className="w-4 h-4 shrink-0" /> : <ShieldCheck className="w-4 h-4 shrink-0" />}
-            {!collapsed && (restricted ? "Activate" : trialLabel)}
-          </button>
-        )}
-
         <div
           className={`flex items-center gap-2 rounded-xl p-2.5 ${collapsed ? "flex-col" : "justify-between"} ${
             t.dark ? "bg-white/5 border border-white/10" : "bg-white/60 border border-white/70"
@@ -144,11 +126,9 @@ export default function Sidebar({ onOpenActivation }) {
             {!collapsed && (
               <div className="text-left min-w-0">
                 <div className={`text-sm font-semibold truncate ${t.textPrimary}`}>{user?.name}</div>
-                <div className={`text-xs ${t.textSecondary}`}>{user?.role}</div>
+                <div className={`text-xs ${t.textSecondary}`}>This browser</div>
               </div>
             )}
-          </div>
-          <div className={`flex items-center gap-1 ${collapsed ? "flex-col" : ""}`}>
           </div>
         </div>
       </div>

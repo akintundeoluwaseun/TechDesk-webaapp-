@@ -15,6 +15,7 @@ import { useThemeTokens } from "../lib/ThemeContext";
 import { useSettings } from "../lib/SettingsContext";
 import { db } from "../lib/db";
 import { money } from "../lib/currency";
+import { useAuth } from "../lib/AuthContext";
 
 function isToday(iso) {
   const d = new Date(iso);
@@ -24,6 +25,7 @@ function isToday(iso) {
 
 export default function DashboardPage() {
   const t = useThemeTokens();
+  const { user } = useAuth();
   const { settings } = useSettings();
   const labels = settings.labels;
   const navigate = useNavigate();
@@ -92,7 +94,7 @@ export default function DashboardPage() {
 
   return (
     <div className="flex-1 p-4 md:p-8">
-      <Topbar title="Dashboard" subtitle="Welcome back, Admin 👋" />
+      <Topbar title="Dashboard" subtitle={`Welcome back, ${user?.name || "there"} \u{1F44B}`} />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
         {stats.map((s) => {

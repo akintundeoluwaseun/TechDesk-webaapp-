@@ -3,7 +3,6 @@ import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider, useThemeTokens } from "./lib/ThemeContext";
 import { SettingsProvider } from "./lib/SettingsContext";
 import { AuthProvider } from "./lib/AuthContext";
-import { LicenseProvider, useLicense } from "./lib/LicenseContext";
 import { HelpProvider, useHelp } from "./lib/HelpContext";
 import { useAutoBackup } from "./lib/useAutoBackup";
 import { useHqSync } from "./lib/useHqSync";
@@ -11,8 +10,6 @@ import Splash from "./components/Splash";
 import Sidebar from "./components/Sidebar";
 import MobileNav from "./components/MobileNav";
 import MobileAppBar from "./components/MobileAppBar";
-import RestrictedOverlay from "./components/RestrictedOverlay";
-import ActivationModal from "./components/ActivationModal";
 import TutorialModal from "./components/TutorialModal";
 
 const DashboardPage = lazy(() => import("./pages/DashboardPage"));
@@ -33,18 +30,16 @@ function Guard({ children }) {
 
 function Shell() {
   const t = useThemeTokens();
-  const { restricted } = useLicense();
   const { open: helpOpen, dismiss: dismissHelp } = useHelp();
-  const [showActivation, setShowActivation] = useState(false);
   useAutoBackup();
   useHqSync();
 
   return (
     <div className={`min-h-screen w-full flex ${t.bg}`}>
-      <Sidebar onOpenActivation={() => setShowActivation(true)} />
+      <Sidebar />
       <MobileNav />
       <div className="flex-1 relative pb-16 md:pb-0 min-w-0">
-        <MobileAppBar onOpenActivation={() => setShowActivation(true)} />
+        <MobileAppBar />
         <Suspense fallback={null}>
           <Routes>
             <Route path="/" element={<Guard path="/"><DashboardPage /></Guard>} />
@@ -58,9 +53,7 @@ function Shell() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>
-        {restricted && <RestrictedOverlay onClick={() => setShowActivation(true)} />}
       </div>
-      {showActivation && <ActivationModal onClose={() => setShowActivation(false)} />}
       {helpOpen && <TutorialModal onClose={dismissHelp} />}
     </div>
   );
@@ -77,7 +70,6 @@ export default function App() {
   return (
     <ThemeProvider>
       <SettingsProvider>
-        <LicenseProvider>
           <AuthProvider>
             <HelpProvider>
               <HashRouter>
@@ -89,7 +81,6 @@ export default function App() {
               </HashRouter>
             </HelpProvider>
           </AuthProvider>
-        </LicenseProvider>
       </SettingsProvider>
     </ThemeProvider>
   );

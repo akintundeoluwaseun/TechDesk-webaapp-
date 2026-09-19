@@ -10,14 +10,11 @@ import {
   BarChart3,
   ClipboardList,
   Settings,
-  ShieldCheck,
-  ShieldAlert,
   LogOut,
 } from "lucide-react";
 import { useTheme, useThemeTokens } from "../lib/ThemeContext";
 import { useAuth, canAccess } from "../lib/AuthContext";
 import { useSettings } from "../lib/SettingsContext";
-import { useLicense } from "../lib/LicenseContext";
 
 // The phone's persistent header: who you are and where you are, plus the
 // three controls that belong to the whole app rather than to a page. The
@@ -30,12 +27,11 @@ const DRAWER_ITEMS = [
   { to: "/settings", label: "Settings", icon: Settings },
 ];
 
-export default function MobileAppBar({ onOpenActivation }) {
+export default function MobileAppBar() {
   const t = useThemeTokens();
   const { dark, toggleDark } = useTheme();
   const { settings } = useSettings();
   const { user } = useAuth();
-  const { activated, restricted, daysLeft } = useLicense();
   const [drawer, setDrawer] = useState(false);
   const navigate = useNavigate();
 
@@ -77,9 +73,6 @@ export default function MobileAppBar({ onOpenActivation }) {
           className={`relative ${t.textSecondary}`}
         >
           <Bell className="w-5 h-5" />
-          {restricted && (
-            <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-red-500" />
-          )}
         </button>
 
         <div
@@ -126,23 +119,6 @@ export default function MobileAppBar({ onOpenActivation }) {
               })}
             </nav>
 
-            {!activated && (
-              <button
-                onClick={() => {
-                  setDrawer(false);
-                  onOpenActivation?.();
-                }}
-                className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold mb-2 ${
-                  restricted ? "bg-red-500 text-white" : dark ? "bg-white text-black" : "bg-slate-900 text-white"
-                }`}
-              >
-                {restricted ? <ShieldAlert className="w-4 h-4" /> : <ShieldCheck className="w-4 h-4" />}
-                {restricted ? "Activate" : `Trial: ${daysLeft} day${daysLeft === 1 ? "" : "s"} left`}
-              </button>
-            )}
-
-            <div className="flex gap-2">
-            </div>
           </div>
         </div>
       )}

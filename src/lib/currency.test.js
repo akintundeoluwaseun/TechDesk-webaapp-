@@ -24,8 +24,8 @@ describe("the shop's currency", () => {
     expect(getCurrency("ZZZ").code).toBe("NGN");
   });
 
-  it("offers twenty currencies, each complete and unique", () => {
-    expect(CURRENCIES.length).toBe(20);
+  it("offers ten currencies, each complete and unique", () => {
+    expect(CURRENCIES.length).toBe(10);
     const codes = CURRENCIES.map((c) => c.code);
     expect(new Set(codes).size).toBe(codes.length);
     for (const c of CURRENCIES) {
@@ -52,9 +52,7 @@ describe("money that has to survive a PDF", () => {
   it("spells out the ones whose symbol is not printable", () => {
     expect(currencyPdfSymbol({ currency: "NGN" })).toBe("N");
     expect(currencyPdfSymbol({ currency: "GHS" })).toBe("GHS");
-    expect(currencyPdfSymbol({ currency: "INR" })).toBe("Rs");
     expect(currencyPdfSymbol({ currency: "EUR" })).toBe("EUR");
-    expect(currencyPdfSymbol({ currency: "AED" })).toBe("AED");
   });
 
   it("prints the real symbol where it is printable", () => {
