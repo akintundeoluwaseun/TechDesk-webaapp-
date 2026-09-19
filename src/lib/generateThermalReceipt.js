@@ -1,5 +1,5 @@
 import jsPDF from "jspdf";
-import { savePdf } from "./saveFile";
+import { savePdf, printPdf, receiptFilename } from "./saveFile";
 import { db } from "./db";
 import { pdfSafe } from "./pdfSafe";
 import { currencyPdfSymbol } from "./currency";
@@ -8,7 +8,7 @@ const WIDTH_MM = 58;
 const MARGIN_MM = 3;
 const LINE_H = 4.2;
 
-export function generateThermalReceiptPdf(sale, { autoOpen = true } = {}) {
+export function generateThermalReceiptPdf(sale, { autoOpen = true, print = false } = {}) {
   const settings = db.getSettings();
   const cur = currencyPdfSymbol(settings);
   const contentW = WIDTH_MM - MARGIN_MM * 2;
@@ -49,15 +49,11 @@ export function generateThermalReceiptPdf(sale, { autoOpen = true } = {}) {
     y += LINE_H;
   };
 
-  // ---- Logo mark (small laptop+wrench outline, no glyphs) ----
-  const logoW = 9,
-    logoH = 6;
-  const logoX = WIDTH_MM / 2 - logoW / 2;
-  doc.setLineWidth(0.5);
-  doc.rect(logoX, y, logoW, logoH, "S");
-  doc.setLineWidth(0.3);
-  doc.line(logoX - 1.2, y + logoH + 1, logoX + logoW + 1.2, y + logoH + 1);
-  y += logoH + 4;
+  // ---- Logo ----
+  // The shop's own, or nothing. A 58mm roll has no room to waste on an empty
+  // box, and an empty box is what this drew before.
+  const afterLogo = drawLogo(doc, settings, WIDTH_MM / 2, y, 30, 14);
+  y = afterLogo > y ? afterLogo + 3 : y;
 
   // ---- Header ----
   center(pdfSafe(settings.shopName || "TechDesk").toUpperCase(), 12, true);
@@ -121,6 +117,41 @@ export function generateThermalReceiptPdf(sale, { autoOpen = true } = {}) {
   y += 1;
   center(`Powered by ${pdfSafe(settings.shopName || "TechDesk")}`, 6);
 
-  if (autoOpen) savePdf(doc, `${sale.invoice}-receipt-58mm.pdf`);
+  const filename = receiptFilename(sale.customerName, sale.invoice, "58mm");
+  if (autoOpen) {
+    if (print) printPdf(doc, filename);
+    else savePdf(doc, filename);
+  }
   return doc;
+}
+
+/**
+ * The shop's logo at the top of a receipt, or nothing at all.
+ *
+ * This used to draw a bare rectangle as a "logo mark" on every receipt,
+ * whether or not the shop had a logo. On a customer's copy that reads as a
+ * picture that failed to load, not as a design -- and the shop had already
+ * uploaded a real logo in Settings, which no receipt ever used.
+ *
+ * Returns the y to carry on from, so a shop with no logo simply starts
+ * higher rather than leaving a hole where the box was.
+ */
+function drawLogo(doc, settings, centreX, y, maxW, maxH) {
+  const data = settings.logo;
+  if (!data || typeof data !== "string" || !data.startsWith("data:image/")) return y;
+
+  try {
+    const props = doc.getImageProperties(data);
+    // Fit inside the box without stretching: a squashed logo looks worse
+    // than a small one.
+    const scale = Math.min(maxW / props.width, maxH / props.height);
+    const w = props.width * scale;
+    const h = props.height * scale;
+    doc.addImage(data, centreX - w / 2, y, w, h);
+    return y + h;
+  } catch {
+    // An unreadable or unsupported image must not take the whole receipt
+    // down -- the sale still needs its paperwork.
+    return y;
+  }
 }

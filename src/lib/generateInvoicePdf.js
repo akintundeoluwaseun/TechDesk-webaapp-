@@ -1,11 +1,11 @@
 import jsPDF from "jspdf";
-import { savePdf } from "./saveFile";
+import { savePdf, printPdf, receiptFilename } from "./saveFile";
 import autoTable from "jspdf-autotable";
 import { db } from "./db";
 import { pdfSafe } from "./pdfSafe";
 import { currencyPdfSymbol } from "./currency";
 
-export function generateInvoicePdf(sale, { autoOpen = true } = {}) {
+export function generateInvoicePdf(sale, { autoOpen = true, print = false } = {}) {
   const settings = db.getSettings();
   const cur = currencyPdfSymbol(settings);
   const doc = new jsPDF({ unit: "pt", format: "a4" });
@@ -14,16 +14,12 @@ export function generateInvoicePdf(sale, { autoOpen = true } = {}) {
   const contentW = pageW - marginX * 2;
   let y = 40;
 
-  // ---- Header (vector logo mark - no glyphs, those broke PDF generation) ----
-  const logoW = 22,
-    logoH = 15,
-    logoX = pageW / 2 - logoW / 2,
-    logoY = y;
-  doc.setLineWidth(1.2);
-  doc.rect(logoX, logoY, logoW, logoH, "S");
-  doc.setLineWidth(0.8);
-  doc.line(logoX - 3, logoY + logoH + 3, logoX + logoW + 3, logoY + logoH + 3);
-  y += 34;
+  // ---- Header ----
+  // The shop's own logo when it has one, and nothing when it has not. The
+  // empty rectangle that used to sit here read as a broken image on every
+  // receipt a customer was handed.
+  const afterLogo = drawLogo(doc, settings, pageW / 2, y, 90, 45);
+  y = afterLogo > y ? afterLogo + 16 : y + 4;
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(26);
@@ -245,9 +241,43 @@ export function generateInvoicePdf(sale, { autoOpen = true } = {}) {
   doc.setFontSize(9);
   doc.text(`Powered by ${pdfSafe(settings.shopName || "TechDesk")}`, pageW / 2, y, { align: "center" });
 
-  const filename = `${sale.invoice}.pdf`;
+  const filename = receiptFilename(sale.customerName, sale.invoice);
   if (autoOpen) {
-    savePdf(doc, filename);
+    // print: straight to whatever views PDFs here, so nothing has to be
+    // fished back out of Downloads to be shown to the customer.
+    if (print) printPdf(doc, filename);
+    else savePdf(doc, filename);
   }
   return doc;
+}
+
+/**
+ * The shop's logo at the top of a receipt, or nothing at all.
+ *
+ * This used to draw a bare rectangle as a "logo mark" on every receipt,
+ * whether or not the shop had a logo. On a customer's copy that reads as a
+ * picture that failed to load, not as a design -- and the shop had already
+ * uploaded a real logo in Settings, which no receipt ever used.
+ *
+ * Returns the y to carry on from, so a shop with no logo simply starts
+ * higher rather than leaving a hole where the box was.
+ */
+function drawLogo(doc, settings, centreX, y, maxW, maxH) {
+  const data = settings.logo;
+  if (!data || typeof data !== "string" || !data.startsWith("data:image/")) return y;
+
+  try {
+    const props = doc.getImageProperties(data);
+    // Fit inside the box without stretching: a squashed logo looks worse
+    // than a small one.
+    const scale = Math.min(maxW / props.width, maxH / props.height);
+    const w = props.width * scale;
+    const h = props.height * scale;
+    doc.addImage(data, centreX - w / 2, y, w, h);
+    return y + h;
+  } catch {
+    // An unreadable or unsupported image must not take the whole receipt
+    // down -- the sale still needs its paperwork.
+    return y;
+  }
 }

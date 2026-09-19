@@ -68,3 +68,52 @@ export async function saveBlob(blob, filename) {
 export function savePdf(doc, filename) {
   return saveBlob(doc.output("blob"), filename);
 }
+
+/**
+ * A filename a shop can find again: who it was for, then which receipt.
+ *
+ * "INV-00001.pdf" tells you nothing in a folder of two hundred. "Oluwaseun -
+ * INV-00001.pdf" sorts by customer and still carries the number.
+ *
+ * Strips what filesystems refuse and collapses the rest, because a customer
+ * called "Ade / Bola" must not create a folder.
+ */
+export function receiptFilename(customerName, reference, suffix = "") {
+  const who = String(customerName || "")
+    .replace(/[\\/:*?"<>|]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 40);
+  const ref = String(reference || "receipt").trim();
+  const tail = suffix ? `-${suffix}` : "";
+  return who ? `${who} - ${ref}${tail}.pdf` : `${ref}${tail}.pdf`;
+}
+
+/**
+ * Opens the PDF in whatever views PDFs here, instead of saving it.
+ *
+ * On a phone that is the system viewer, reached through the same share sheet
+ * the save path uses -- Android's WebView has no viewer of its own. On a
+ * desktop it is a new tab, where the browser's own print button is one click
+ * away. Either way nothing lands in Downloads that the shop has to tidy up.
+ */
+export async function printPdf(doc, filename) {
+  if (IS_ANDROID_APP) {
+    // No separate "open" on Android: the share sheet is how a file reaches
+    // an app that can show it.
+    return saveBlob(doc.output("blob"), filename);
+  }
+
+  const url = URL.createObjectURL(doc.output("blob"));
+  const win = window.open(url, "_blank");
+  if (!win) {
+    // Pop-up blocked. Falling back to a download beats doing nothing and
+    // leaving the shop wondering whether the button works.
+    URL.revokeObjectURL(url);
+    return saveBlob(doc.output("blob"), filename);
+  }
+  // Long enough for the tab to have loaded it; revoking sooner shows a blank
+  // viewer, which looks exactly like a broken button.
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+  return { ok: true, via: "viewer" };
+}

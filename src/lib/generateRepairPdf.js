@@ -1,5 +1,5 @@
 import jsPDF from "jspdf";
-import { savePdf } from "./saveFile";
+import { savePdf, printPdf, receiptFilename } from "./saveFile";
 import autoTable from "jspdf-autotable";
 import { db } from "./db";
 import { pdfSafe } from "./pdfSafe";
@@ -52,22 +52,40 @@ function textBox(doc, x, y, w, text, minH = 30) {
 
 function header(doc, marginX, settings, big = 22) {
   let y = 42;
-  doc.setLineWidth(1.2);
-  doc.rect(marginX, y - 24, 22, 15, "S");
-  doc.setLineWidth(0.8);
-  doc.line(marginX - 3, y - 6, marginX + 25, y - 6);
+
+  // The shop's logo when it has one. The empty rectangle that used to sit
+  // here read as a picture that had failed to load, on every ticket handed
+  // to a customer -- and the shop's real logo, uploaded in Settings, was
+  // never used by any document.
+  const hasLogo = drawLogoLeft(doc, settings, marginX, y - 26, 26, 20);
+  const textX = marginX + (hasLogo ? 34 : 0);
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(big);
-  doc.text(pdfSafe(settings.shopName || "TechDesk").toUpperCase(), marginX + 30, y - 8);
+  doc.text(pdfSafe(settings.shopName || "TechDesk").toUpperCase(), textX, y - 8);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
-  doc.text(settings.tagline || "", marginX + 30, y + 6);
+  doc.text(settings.tagline || "", textX, y + 6);
 
   return y + 24;
 }
 
-export function generateRepairTicketPdf(repair, { autoOpen = true } = {}) {
+/** Left-aligned logo for the ticket header. True when one was drawn. */
+function drawLogoLeft(doc, settings, x, y, maxW, maxH) {
+  const data = settings.logo;
+  if (!data || typeof data !== "string" || !data.startsWith("data:image/")) return false;
+  try {
+    const props = doc.getImageProperties(data);
+    const scale = Math.min(maxW / props.width, maxH / props.height);
+    doc.addImage(data, x, y, props.width * scale, props.height * scale);
+    return true;
+  } catch {
+    // An unreadable image must not stop a ticket printing.
+    return false;
+  }
+}
+
+export function generateRepairTicketPdf(repair, { autoOpen = true, print = false } = {}) {
   const settings = db.getSettings();
   const cur = currencyPdfSymbol(settings);
   const doc = new jsPDF({ unit: "pt", format: "a4" });
@@ -231,7 +249,11 @@ export function generateRepairTicketPdf(repair, { autoOpen = true } = {}) {
   doc.text("CUSTOMER SIGNATURE", marginX + (boxW2 + 20) * 2 + 10, sigY + 16);
   doc.line(marginX + (boxW2 + 20) * 2 + 10, sigY + sigH - 16, pageW - marginX - 10, sigY + sigH - 16);
 
-  if (autoOpen) savePdf(doc, `${repair.ticket}.pdf`);
+  const filename = receiptFilename(repair.customerName, repair.ticket);
+  if (autoOpen) {
+    if (print) printPdf(doc, filename);
+    else savePdf(doc, filename);
+  }
   return doc;
 }
 

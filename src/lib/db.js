@@ -94,15 +94,54 @@ function drawDownStock(items) {
   if (!items?.length) return;
   const inventory = read(KEYS.inventory);
   let touched = false;
+  const crossed = [];
+
   items.forEach((item) => {
     if (!item.fromInventory || !item.productId) return;
     const idx = inventory.findIndex((p) => p.id === item.productId);
-    if (idx > -1) {
-      inventory[idx].stock = Math.max(0, Number(inventory[idx].stock || 0) - Number(item.qty || 0));
-      touched = true;
-    }
+    if (idx < 0) return;
+
+    const before = Number(inventory[idx].stock || 0);
+    const after = Math.max(0, before - Number(item.qty || 0));
+    inventory[idx].stock = after;
+    touched = true;
+
+    // Only the sale that changes the picture. Logging every sale of an
+    // already-low item would bury the one that mattered under a dozen
+    // repeats of itself -- so: the sale that first takes it below the
+    // threshold, and the sale that takes the last one, which is a worse
+    // state than low and worth saying even if it was already low.
+    const threshold = Number(inventory[idx].lowStockThreshold || 5);
+    const crossedLow = before > threshold && after <= threshold;
+    const ranOut = before > 0 && after === 0;
+    if (crossedLow || ranOut) crossed.push(inventory[idx]);
   });
+
   if (touched) write(KEYS.inventory, inventory);
+
+  // Written after the stock, so a notification never describes a count that
+  // was not saved.
+  crossed.forEach((p) => {
+    dbLogActivity({
+      type: "lowstock",
+      message: p.stock === 0
+        ? `${p.name || "Item"} is out of stock.`
+        : `${p.name || "Item"} is down to ${p.stock}. Time to restock.`,
+      refId: p.id,
+    });
+  });
+}
+
+/**
+ * Writes an activity row.
+ *
+ * Defined here rather than reached for through `db`, because drawDownStock
+ * runs while db is still being built and would not find it.
+ */
+function dbLogActivity(entry) {
+  const activity = read(KEYS.activity);
+  activity.unshift(stamp({ id: uid("act"), createdAt: new Date().toISOString(), ...entry }));
+  write(KEYS.activity, activity);
 }
 
 export const db = {
@@ -250,11 +289,7 @@ export const db = {
   },
 
   // ---- Activity log ----
-  logActivity: (entry) => {
-    const activity = read(KEYS.activity);
-    activity.unshift(stamp({ id: uid("act"), createdAt: new Date().toISOString(), ...entry }));
-    write(KEYS.activity, activity);
-  },
+  logActivity: dbLogActivity,
   getActivity: () => read(KEYS.activity),
 
   // ---- Notifications (admin-only, clearable) ----

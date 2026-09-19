@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Plus, Search, MessageCircle, FileText, Receipt, Pencil, Trash2 } from "lucide-react";
+import { Plus, Search, MessageCircle, Printer, FileText, Receipt, Pencil, Trash2 } from "lucide-react";
 import Topbar from "../components/Topbar";
 import NewSaleModal from "../components/NewSaleModal";
 import { useThemeTokens } from "../lib/ThemeContext";
@@ -173,44 +173,49 @@ export default function SalesPage() {
                 </select>
               </div>
 
-              <div className="flex items-center gap-2">
+              {/* Labelled, and wrapping rather than shrinking. Five unlabelled
+                  circles the size of a fingertip is a guessing game, and the
+                  two that send a customer their receipt looked the same as
+                  the one that deletes the sale. */}
+              <div className="flex items-center gap-2 flex-wrap">
                 <button
                   onClick={() => sendWhatsApp(sale)}
-                  title="WhatsApp"
-                  className={`w-9 h-9 rounded-full flex items-center justify-center ${t.pillBg}`}
+                  className={`flex items-center gap-1.5 h-9 px-3 rounded-full text-xs font-medium ${t.pillBg}`}
                 >
-                  <MessageCircle className="w-4 h-4" />
+                  <MessageCircle className="w-4 h-4 shrink-0" /> WhatsApp
+                </button>
+                <button
+                  onClick={() => generateInvoicePdf(sale, { print: true })}
+                  className={`flex items-center gap-1.5 h-9 px-3 rounded-full text-xs font-medium ${t.pillBg}`}
+                >
+                  <Printer className="w-4 h-4 shrink-0" /> Print
                 </button>
                 <button
                   onClick={() => generateInvoicePdf(sale)}
-                  title={IS_ANDROID_APP ? "Share PDF receipt" : "A4 PDF"}
-                  className={`w-9 h-9 rounded-full flex items-center justify-center ${t.pillBg}`}
+                  className={`flex items-center gap-1.5 h-9 px-3 rounded-full text-xs font-medium ${t.pillBg}`}
                 >
-                  <FileText className="w-4 h-4" />
+                  <FileText className="w-4 h-4 shrink-0" /> {IS_ANDROID_APP ? "Share" : "Save A4"}
                 </button>
                 <button
                   onClick={() => generateThermalReceiptPdf(sale)}
-                  title={IS_ANDROID_APP ? "Share 58mm receipt" : "58mm receipt"}
-                  className={`w-9 h-9 rounded-full flex items-center justify-center ${t.pillBg}`}
+                  className={`flex items-center gap-1.5 h-9 px-3 rounded-full text-xs font-medium ${t.pillBg}`}
                 >
-                  <Receipt className="w-4 h-4" />
+                  <Receipt className="w-4 h-4 shrink-0" /> 58mm
                 </button>
                 <button
                   onClick={() => {
                     setEditingSale(sale);
                     setShowModal(true);
                   }}
-                  title="Edit sale"
-                  className={`w-9 h-9 rounded-full flex items-center justify-center ${t.pillBg}`}
+                  className={`flex items-center gap-1.5 h-9 px-3 rounded-full text-xs font-medium ${t.pillBg}`}
                 >
-                  <Pencil className="w-4 h-4" />
+                  <Pencil className="w-4 h-4 shrink-0" /> Edit
                 </button>
                 <button
                   onClick={() => handleDelete(sale)}
-                  title="Delete"
-                  className="w-9 h-9 rounded-full flex items-center justify-center text-red-500 bg-red-500/10"
+                  className="flex items-center gap-1.5 h-9 px-3 rounded-full text-xs font-medium text-red-500 bg-red-500/10"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-4 h-4 shrink-0" /> Delete
                 </button>
               </div>
             </div>
