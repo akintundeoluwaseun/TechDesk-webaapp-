@@ -32,11 +32,21 @@ export default function ReportsPage() {
 
   const statCards = [
     { label: `Revenue (${FILTERS.find((f) => f.key === filter)?.label})`, value: `${money(report.revenue, settings)}`, sub: `Sales ${money(report.revenue, settings)} \u00b7 Repairs ${money(report.repairRevenue, settings)}` },
-    { label: "Profit", value: `${money(report.profit, settings)}`, sub: "Revenue minus item cost" },
+    {
+      label: "Profit",
+      value: `${money(report.profit, settings)}`,
+      // A profit that came out negative is a real answer, not a glitch, and
+      // the shop should be able to see where it came from without opening a
+      // spreadsheet: this is what the goods cost against what they sold for.
+      sub: `Revenue ${money(report.revenue + report.repairRevenue, settings)} minus cost ${money(report.cost, settings)}`,
+      negative: report.profit < 0,
+    },
     { label: "Outstanding", value: `${money(report.outstanding, settings)}`, sub: "Unpaid sales & repairs" },
   ];
 
   const secondaryCards = [
+    { label: "Cost of goods", value: money(report.cost, settings) },
+    { label: "Discounts given", value: money(report.discount, settings) },
     { label: "Sales", value: report.salesCount },
     { label: "Repairs", value: report.repairsCount },
     { label: "Completed", value: report.completed },
@@ -86,17 +96,17 @@ export default function ReportsPage() {
         {statCards.map((c) => (
           <div key={c.label} className={`rounded-2xl p-5 ${t.cardBg}`}>
             <div className={`text-sm ${t.textSecondary} mb-1`}>{c.label}</div>
-            <div className={`text-2xl font-bold ${t.textPrimary} mb-1`}>{c.value}</div>
+            <div className={`text-2xl font-bold mb-1 ${c.negative ? "text-red-500" : t.textPrimary}`}>{c.value}</div>
             <div className={`text-xs ${t.textMuted}`}>{c.sub}</div>
           </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-5">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-5 mb-5">
         {secondaryCards.map((c) => (
-          <div key={c.label} className={`rounded-2xl p-5 ${t.cardBg}`}>
-            <div className={`text-sm ${t.textSecondary} mb-1`}>{c.label}</div>
-            <div className={`text-3xl font-bold ${t.textPrimary}`}>{c.value}</div>
+          <div key={c.label} className={`rounded-2xl p-4 sm:p-5 ${t.cardBg}`}>
+            <div className={`text-xs sm:text-sm ${t.textSecondary} mb-1`}>{c.label}</div>
+            <div className={`text-xl sm:text-2xl font-bold break-words ${t.textPrimary}`}>{c.value}</div>
           </div>
         ))}
       </div>

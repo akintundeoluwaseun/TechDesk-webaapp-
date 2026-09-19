@@ -2,6 +2,7 @@ import React, { useRef, useState } from "react";
 import { Sun, Moon, Monitor as MonitorIcon, Upload } from "lucide-react";
 import { useTheme, useThemeTokens } from "../../lib/ThemeContext";
 import { useSettings } from "../../lib/SettingsContext";
+import { shrinkImage } from "../../lib/shrinkImage";
 import BusinessTypeSection from "./BusinessTypeSection";
 import SettingsModal, { SettingsRow } from "../../components/SettingsModal";
 import { BUSINESS_PRESETS } from "../../data/businessPresets";
@@ -47,7 +48,10 @@ export default function ShopTab() {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = () => set("logo", reader.result);
+    // Shrunk before it is stored: the logo is copied into every receipt and
+    // every backup, and a photo straight off a phone would make each one
+    // several megabytes.
+    reader.onload = async () => set("logo", await shrinkImage(reader.result));
     reader.readAsDataURL(file);
   }
 

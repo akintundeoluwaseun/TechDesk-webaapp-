@@ -17,6 +17,8 @@ export default function ProductModal({ product, onClose, onSaved }) {
   const [category, setCategory] = useState(product?.category || categories[0] || "Other");
   const [price, setPrice] = useState(product?.price ?? "");
   const [costPrice, setCostPrice] = useState(product?.costPrice ?? "");
+  const losingMoney =
+    price !== "" && costPrice !== "" && Number(costPrice) > Number(price);
   const [stock, setStock] = useState(product?.stock ?? "0");
   const [lowStockThreshold, setLowStockThreshold] = useState(product?.lowStockThreshold ?? "5");
   const [description, setDescription] = useState(product?.description || "");
@@ -110,6 +112,19 @@ export default function ProductModal({ product, onClose, onSaved }) {
                 onChange={(e) => setCostPrice(e.target.value)}
                 className={`w-full rounded-xl px-4 py-2.5 text-sm outline-none ${t.inputBg}`}
               />
+              {/* Said here rather than discovered in the report: a cost above
+                  the selling price is what makes profit come out negative,
+                  and the usual cause is the two figures typed the wrong way
+                  round. */}
+              {losingMoney ? (
+                <div className="text-xs mt-1.5 text-red-500">
+                  You'd lose {currencySymbol(settings)}
+                  {(Number(costPrice) - Number(price)).toLocaleString()} on each one. Did the two
+                  prices swap places?
+                </div>
+              ) : (
+                <div className={`text-xs mt-1.5 ${t.textMuted}`}>What you paid for it, not what you sell it for.</div>
+              )}
             </div>
           )}
         </div>

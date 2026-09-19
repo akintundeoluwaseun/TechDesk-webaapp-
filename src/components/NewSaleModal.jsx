@@ -32,6 +32,8 @@ export default function NewSaleModal({ sale, onClose, onCompleted }) {
           productId: i.productId,
           name: i.name,
           price: i.price,
+          // Editing a sale must not rewrite what it cost at the time.
+          costPrice: Number(i.costPrice || 0),
           qty: i.qty,
           fromInventory: i.fromInventory,
           imei: i.imei || "",
@@ -103,6 +105,11 @@ export default function NewSaleModal({ sale, onClose, onCompleted }) {
           productId: product.id,
           name: product.name,
           price: product.price,
+          // What it cost the shop on the day it was sold. Kept on the sale
+          // because the report used to look the cost up in today's
+          // inventory, so re-pricing a product silently rewrote the profit
+          // on every sale of it that had already happened.
+          costPrice: Number(product.costPrice || 0),
           qty: 1,
           fromInventory: true,
           imei: "",

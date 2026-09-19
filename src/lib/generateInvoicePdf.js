@@ -19,7 +19,9 @@ export function generateInvoicePdf(sale, { autoOpen = true, print = false } = {}
   // empty rectangle that used to sit here read as a broken image on every
   // receipt a customer was handed.
   const afterLogo = drawLogo(doc, settings, pageW / 2, y, 90, 45);
-  y = afterLogo > y ? afterLogo + 16 : y + 4;
+  // +30pt, not +16: doc.text puts the BASELINE here, and a 26pt capital
+  // reaches about 19pt above it. At +16 the shop name sat inside the logo.
+  y = afterLogo > y ? afterLogo + 30 : y + 4;
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(26);

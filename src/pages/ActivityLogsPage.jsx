@@ -83,27 +83,34 @@ export default function ActivityLogsPage() {
     <div className="flex-1 p-4 md:p-8">
       <Topbar title="Activity Logs" />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 sm:grid-cols-4 lg:grid-cols-7 gap-4 mb-6">
+      {/* Two across on a phone, not one. Seven full-width tiles pushed the
+          log itself off the bottom of the screen, and the column list had
+          two conflicting sm: widths fighting each other in the CSS. */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5 sm:gap-4 mb-6">
         {CATEGORIES.map((c) => {
           const Icon = c.icon;
           return (
             <button
               key={c.key}
               onClick={() => setCategory(category === c.key ? "all" : c.key)}
-              className={`rounded-2xl p-4 text-left ${t.cardBg} ${category === c.key ? "ring-2 ring-blue-500" : ""}`}
+              className={`rounded-2xl p-3 sm:p-4 text-left ${t.cardBg} ${category === c.key ? "ring-2 ring-blue-500" : ""}`}
             >
-              <div className={`w-9 h-9 rounded-full flex items-center justify-center mb-3 ${c.bg}`}>
-                <Icon className={`w-4 h-4 ${c.color}`} />
+              <div className="flex items-center gap-2 sm:block">
+                <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center shrink-0 sm:mb-3 ${c.bg}`}>
+                  <Icon className={`w-4 h-4 ${c.color}`} />
+                </div>
+                <div className="min-w-0">
+                  <div className={`text-xs sm:text-sm truncate ${t.textSecondary}`}>{c.label}</div>
+                  <div className={`text-xl sm:text-2xl font-bold leading-tight ${t.textPrimary}`}>{counts[c.key]}</div>
+                </div>
               </div>
-              <div className={`text-sm ${t.textSecondary}`}>{c.label}</div>
-              <div className={`text-2xl font-bold ${t.textPrimary}`}>{counts[c.key]}</div>
             </button>
           );
         })}
       </div>
 
-      <div className="flex items-center gap-3 mb-6">
-        <div className={`flex-1 flex items-center gap-2 rounded-full px-4 py-3 ${t.cardBg}`}>
+      <div className="flex items-center gap-2 sm:gap-3 mb-6 flex-wrap">
+        <div className={`flex-1 min-w-[180px] flex items-center gap-2 rounded-full px-4 py-3 ${t.cardBg}`}>
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}

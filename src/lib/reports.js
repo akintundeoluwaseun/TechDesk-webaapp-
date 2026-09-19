@@ -31,6 +31,22 @@ function fmtDate(d) {
   return d.toISOString().slice(0, 10);
 }
 
+/**
+ * What one line of a sale cost the shop.
+ *
+ * The sale's own snapshot first: the report used to read today's inventory,
+ * so re-pricing a product rewrote the profit on every sale of it that had
+ * already happened. Older sales carry no snapshot, so they still fall back
+ * to the product -- the best figure available for them.
+ */
+function itemCost(item) {
+  if (item.costPrice != null && item.costPrice !== "") {
+    return Number(item.costPrice || 0) * Number(item.qty || 0);
+  }
+  const product = item.productId ? db.findInventoryItem(item.productId) : null;
+  return product ? Number(product.costPrice || 0) * Number(item.qty || 0) : 0;
+}
+
 export function computeReport(filter = "30d") {
   const start = getRangeStart(filter);
   const sales = db.getSales().filter((s) => new Date(s.createdAt) >= start);
@@ -42,12 +58,10 @@ export function computeReport(filter = "30d") {
     .reduce((sum, r) => sum + Number(r.repairCost || 0), 0);
 
   const cost = sales.reduce(
-    (sum, s) => sum + (s.items || []).reduce((isum, i) => {
-      const product = i.productId ? db.findInventoryItem(i.productId) : null;
-      return isum + (product ? Number(product.costPrice || 0) * i.qty : 0);
-    }, 0),
+    (sum, s) => sum + (s.items || []).reduce((isum, i) => isum + itemCost(i), 0),
     0
   );
+  const discount = sales.reduce((sum, s) => sum + Number(s.discount || 0), 0);
   const profit = revenue + repairRevenue - cost;
 
   const outstandingSales = sales
@@ -88,8 +102,7 @@ export function computeReport(filter = "30d") {
       if (!productMap[i.name]) productMap[i.name] = { name: i.name, qty: 0, revenue: 0, cost: 0 };
       productMap[i.name].qty += i.qty;
       productMap[i.name].revenue += i.price * i.qty;
-      const product = i.productId ? db.findInventoryItem(i.productId) : null;
-      productMap[i.name].cost += product ? Number(product.costPrice || 0) * i.qty : 0;
+      productMap[i.name].cost += itemCost(i);
     });
   });
   const topProducts = Object.values(productMap)
@@ -128,6 +141,8 @@ export function computeReport(filter = "30d") {
   return {
     revenue,
     repairRevenue,
+    cost,
+    discount,
     profit,
     outstanding,
     salesCount: sales.length,
@@ -145,6 +160,8 @@ export function reportToCsv(report) {
   const lines = [];
   lines.push("TechDesk Report");
   lines.push(`Revenue,${report.revenue}`);
+  lines.push(`Cost of goods,${report.cost}`);
+  lines.push(`Discounts given,${report.discount}`);
   lines.push(`Profit,${report.profit}`);
   lines.push(`Outstanding,${report.outstanding}`);
   lines.push(`Sales,${report.salesCount}`);

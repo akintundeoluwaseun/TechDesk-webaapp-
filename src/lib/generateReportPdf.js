@@ -28,13 +28,18 @@ export function generateReportPdf(report, filter, { autoOpen = true } = {}) {
   doc.line(marginX, y, pageW - marginX, y);
   y += 28;
 
+  // Cost sits next to profit on purpose: a profit that came out negative
+  // is a real answer, and the figure it came from should be on the same
+  // page rather than left for the shop to guess at.
   const statCards = [
     ["Revenue", `${cur}${report.revenue.toLocaleString()}`],
+    ["Cost of goods", `${cur}${Number(report.cost || 0).toLocaleString()}`],
     ["Profit", `${cur}${report.profit.toLocaleString()}`],
     ["Outstanding", `${cur}${report.outstanding.toLocaleString()}`],
     ["Sales", String(report.salesCount)],
     ["Repairs", String(report.repairsCount)],
     ["Completed", String(report.completed)],
+    ["Discounts given", `${cur}${Number(report.discount || 0).toLocaleString()}`],
   ];
   const cardW = (contentW - 20) / 3;
   statCards.forEach(([label, value], i) => {
@@ -51,7 +56,9 @@ export function generateReportPdf(report, filter, { autoOpen = true } = {}) {
     doc.setFontSize(13);
     doc.text(value, x + 10, cy + 34);
   });
-  y += 56 * 2 + 20;
+  // However many rows the cards actually took, rather than a hardcoded two:
+  // adding a card used to make the next section land on top of them.
+  y += 56 * Math.ceil(statCards.length / 3) + 20;
 
   if (report.topProducts.length > 0) {
     doc.setFont("helvetica", "bold");

@@ -53,7 +53,9 @@ export function generateThermalReceiptPdf(sale, { autoOpen = true, print = false
   // The shop's own, or nothing. A 58mm roll has no room to waste on an empty
   // box, and an empty box is what this drew before.
   const afterLogo = drawLogo(doc, settings, WIDTH_MM / 2, y, 30, 14);
-  y = afterLogo > y ? afterLogo + 3 : y;
+  // The header line below is drawn on its baseline, so this has to clear a
+  // 12pt ascent (~4.2mm) as well as leave a gap.
+  y = afterLogo > y ? afterLogo + 6 : y;
 
   // ---- Header ----
   center(pdfSafe(settings.shopName || "TechDesk").toUpperCase(), 12, true);
