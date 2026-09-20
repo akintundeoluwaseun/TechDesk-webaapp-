@@ -26,6 +26,16 @@ export default function DeveloperTab() {
         </div>
       </div>
 
+      {/* Which build you are looking at. The app is deployed away from the
+          repo, so without this there is no way to tell from the outside
+          whether a fix has actually gone live. */}
+      <div className={`rounded-xl px-4 py-3 mb-4 ${t.insetBg}`}>
+        <div className={`text-xs uppercase tracking-wider ${t.textMuted}`}>This build</div>
+        <div className={`mt-1 text-sm font-mono ${t.textPrimary}`}>
+          {__BUILD_SHA__} &middot; {new Date(__BUILD_AT__).toLocaleString()}
+        </div>
+      </div>
+
       <div className="flex flex-col gap-3">
         {rows.map((r) => {
           const Icon = r.icon;

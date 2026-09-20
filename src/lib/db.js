@@ -46,8 +46,18 @@ function read(key) {
   }
 }
 
+// Anything that wants to know the shop changed listens for this. One place,
+// because every mutation in this file goes through write() -- a per-method
+// notification would miss whichever one got added last.
+export const CHANGED_EVENT = "techdesk:changed";
+
 function write(key, value) {
   localStorage.setItem(key, JSON.stringify(value));
+  try {
+    window.dispatchEvent(new CustomEvent(CHANGED_EVENT, { detail: { key } }));
+  } catch {
+    // No window (tests, a worker): storing still succeeded, which is the job.
+  }
 }
 
 function uid(prefix = "id") {
