@@ -25,6 +25,9 @@ const EDITION = "web";
 
 /** The handle from connectStart, held only until verify. Never persisted. */
 let pendingState = null;
+// The provider's id for the code that was just sent. Handed back at verify so
+// the check works even on a backend that has not stored it.
+let pendingOtpId = null;
 let pendingPhone = null;
 
 async function post(fn, body, token) {
@@ -80,6 +83,7 @@ export const hq = {
 
     if (res.ok) {
       pendingState = res.state;
+      pendingOtpId = res.otpId || null;
       pendingPhone = hqPhone;
     }
     return res;
@@ -93,6 +97,7 @@ export const hq = {
 
     const res = await post("connect-verify", {
       state: pendingState,
+      otpId: pendingOtpId,
       installId: installId(),
       targetPhone: pendingPhone,
       code,
@@ -112,6 +117,7 @@ export const hq = {
     // The handle is spent either way: it cannot be used twice, and keeping it
     // around only invites a confusing second attempt.
     pendingState = null;
+    pendingOtpId = null;
     pendingPhone = null;
 
     if (!saved.ok) {
@@ -159,6 +165,7 @@ export const hq = {
   /** Forgets the connection in this browser. The install id survives. */
   async disconnect() {
     pendingState = null;
+    pendingOtpId = null;
     pendingPhone = null;
     return clearState();
   },

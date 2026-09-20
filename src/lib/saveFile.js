@@ -1,4 +1,5 @@
 import { IS_ANDROID_APP } from "./platform";
+import { toast } from "./toast";
 
 // Saving a generated file, from whichever shell the app is running in.
 //
@@ -37,18 +38,24 @@ function browserDownload(blob, filename) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-export async function saveBlob(blob, filename) {
+export async function saveBlob(blob, filename, { share = false } = {}) {
   if (!IS_ANDROID_APP) {
     browserDownload(blob, filename);
     return { ok: true, via: "download" };
   }
 
   try {
-    // On Android the file is written to the app's cache and handed to the
-    // system share sheet, which is the more useful ending anyway: the shop
-    // can save it, print it, or send it straight to the customer.
-    const { nativeSave } = await import("./nativeSave");
-    return await nativeSave(await blobToBase64(blob), filename);
+    const native = await import("./nativeSave");
+    const base64 = await blobToBase64(blob);
+
+    // Share only when a button said share. Saving saves: the file lands in
+    // the phone's own files and a line on screen says where, rather than
+    // opening a chooser the shop has to answer before anything is kept.
+    if (share) return await native.nativeShare(base64, filename);
+
+    const saved = await native.nativeSave(base64, filename);
+    toast(`Saved to ${saved.folder || "your files"}`);
+    return saved;
   } catch (err) {
     const message = String(err?.message || err);
     // A cancelled share sheet isn't a failure -- the file is written either way.
@@ -67,6 +74,11 @@ export async function saveBlob(blob, filename) {
 // jsPDF hands back a real Blob, so PDFs and CSVs share one path.
 export function savePdf(doc, filename) {
   return saveBlob(doc.output("blob"), filename);
+}
+
+/** The share sheet, for a button that says share. */
+export function sharePdf(doc, filename) {
+  return saveBlob(doc.output("blob"), filename, { share: true });
 }
 
 /**
@@ -99,9 +111,10 @@ export function receiptFilename(customerName, reference, suffix = "") {
  */
 export async function printPdf(doc, filename) {
   if (IS_ANDROID_APP) {
-    // No separate "open" on Android: the share sheet is how a file reaches
-    // an app that can show it.
-    return saveBlob(doc.output("blob"), filename);
+    // Android has no "open in a viewer" of its own that a web app can call:
+    // the chooser the share sheet puts up is how a PDF reaches a viewer or
+    // a print service. So printing shares, and saving saves.
+    return saveBlob(doc.output("blob"), filename, { share: true });
   }
 
   const url = URL.createObjectURL(doc.output("blob"));

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Plus, Search, MessageCircle, Printer, FileText, Receipt, Pencil, Trash2 } from "lucide-react";
 import Topbar from "../components/Topbar";
 import NewSaleModal from "../components/NewSaleModal";
+import PrintSizeModal from "../components/PrintSizeModal";
 import { useThemeTokens } from "../lib/ThemeContext";
 import { useAuth } from "../lib/AuthContext";
 import { useSettings } from "../lib/SettingsContext";
@@ -9,7 +10,6 @@ import { db } from "../lib/db";
 import { generateInvoicePdf } from "../lib/generateInvoicePdf";
 import { generateThermalReceiptPdf } from "../lib/generateThermalReceipt";
 import { openWhatsApp, saleMessage } from "../lib/share";
-import { IS_ANDROID_APP } from "../lib/platform";
 import { money } from "../lib/currency";
 
 const PAYMENT_STATUSES = ["Paid", "Pending", "Partial"];
@@ -29,6 +29,9 @@ export default function SalesPage() {
   const { user } = useAuth();
   const { settings } = useSettings();
   const [showModal, setShowModal] = useState(false);
+  // The sale waiting on a paper size, or null. Print asks rather than
+  // assuming A4: a counter with a thermal roll wants the other one.
+  const [printing, setPrinting] = useState(null);
   const [editingSale, setEditingSale] = useState(null);
   const [search, setSearch] = useState("");
   const [sales, setSales] = useState(() => db.getSales());
@@ -185,7 +188,7 @@ export default function SalesPage() {
                   <MessageCircle className="w-4 h-4 shrink-0" /> WhatsApp
                 </button>
                 <button
-                  onClick={() => generateInvoicePdf(sale, { print: true })}
+                  onClick={() => setPrinting(sale)}
                   className={`flex items-center gap-1.5 h-9 px-3 rounded-full text-xs font-medium ${t.pillBg}`}
                 >
                   <Printer className="w-4 h-4 shrink-0" /> Print
@@ -194,7 +197,7 @@ export default function SalesPage() {
                   onClick={() => generateInvoicePdf(sale)}
                   className={`flex items-center gap-1.5 h-9 px-3 rounded-full text-xs font-medium ${t.pillBg}`}
                 >
-                  <FileText className="w-4 h-4 shrink-0" /> {IS_ANDROID_APP ? "Share" : "Save A4"}
+                  <FileText className="w-4 h-4 shrink-0" /> Save A4
                 </button>
                 <button
                   onClick={() => generateThermalReceiptPdf(sale)}
@@ -221,6 +224,19 @@ export default function SalesPage() {
             </div>
           ))}
         </div>
+      )}
+
+      {printing && (
+        <PrintSizeModal
+          title={`Print ${printing.invoice || "receipt"}`}
+          onClose={() => setPrinting(null)}
+          onPick={(size) => {
+            const sale = printing;
+            setPrinting(null);
+            if (size === "58mm") generateThermalReceiptPdf(sale, { print: true });
+            else generateInvoicePdf(sale, { print: true });
+          }}
+        />
       )}
 
       {showModal && (

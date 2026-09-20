@@ -48,8 +48,14 @@ export function timeAgo(iso) {
  * Low stock is a live state rather than an event, so it borrows the
  * product's own timestamp. Using "now" would make every item jump to the
  * top of the list every time the bell was opened.
+ *
+ * `clearedAt` actually empties the list rather than only greying it: Clear
+ * used to mark everything read and leave every line where it was, which
+ * from the counter looks exactly like a button that does nothing. Anything
+ * from before that moment is gone; the next sale, repair or low-stock
+ * crossing puts a fresh line at the top.
  */
-export function notificationFeed(limit = 8) {
+export function notificationFeed(clearedAt = null, limit = 8) {
   const activity = db.getActivity();
   const lowStock = db
     .getInventory()
@@ -63,12 +69,19 @@ export function notificationFeed(limit = 8) {
       createdAt: p.createdAt || p.updatedAt || new Date(0).toISOString(),
     })),
   ];
-  merged.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-  return merged.slice(0, limit);
+  const cut = clearedAt ? new Date(clearedAt) : null;
+  // >= rather than >: clearing and then selling in the same millisecond is
+  // rare but real, and dropping that sale's line is a notification the shop
+  // never sees.
+  const kept = cut ? merged.filter((item) => new Date(item.createdAt) >= cut) : merged;
+  kept.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  return kept.slice(0, limit);
 }
 
 export function isUnread(item, clearedAt) {
-  return !clearedAt || new Date(item.createdAt) > new Date(clearedAt);
+  // Same boundary as the feed above, so what is shown and what counts as
+  // new can never disagree.
+  return !clearedAt || new Date(item.createdAt) >= new Date(clearedAt);
 }
 
 export function unreadCount(feed, clearedAt) {
