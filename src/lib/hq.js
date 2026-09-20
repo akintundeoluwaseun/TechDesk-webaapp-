@@ -148,7 +148,15 @@ export const hq = {
 
     // An empty push is still worth making: it is how a branch says "still
     // here", and it is what keeps HQ's online dot honest.
+    //
+    // The device token goes in the BODY. sync-push reads body.token and
+    // nothing else -- the Authorization header carries the publishable key
+    // that gets the request through the gateway, which is a different thing
+    // entirely. Sending it only as a bearer meant every push came back
+    // "Missing token", so a browser could connect to HQ and then never
+    // deliver a single sale.
     const res = await post("sync-push", {
+      token: state.token,
       records: batch.records,
       edition: EDITION,
       appVersion: appVersion || null,

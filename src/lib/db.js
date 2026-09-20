@@ -526,6 +526,22 @@ export const db = {
    * in -- otherwise a shop's entire existing history would look unchanged and
    * never be sent at all.
    */
+  /**
+   * How many records are genuinely still waiting to go up.
+   *
+   * Not the same as the batch length. getSyncBatch deliberately re-sends the
+   * record sitting exactly on the cursor, because two records can share a
+   * millisecond and a strict comparison would drop the second one forever.
+   * Counting that re-send as "waiting" would leave the screen permanently
+   * reading "1 record waiting" on a shop that is fully up to date.
+   */
+  countUnsynced: (since) => {
+    const batch = db.getSyncBatch(since);
+    if (!since) return batch.records.length;
+    const cursor = new Date(since).getTime();
+    return batch.records.filter((r) => new Date(r.updatedAt).getTime() > cursor).length;
+  },
+
   getSyncBatch: (since, limit = 400) => {
     const after = since ? new Date(since).getTime() : 0;
     const changed = [];
