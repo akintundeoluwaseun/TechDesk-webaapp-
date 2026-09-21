@@ -4,13 +4,23 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
     <link rel="manifest" href="./manifest.webmanifest" />
-    <link rel="apple-touch-icon" href="./icon-192.png" />
+    <!-- iPhone takes its home-screen icon from here, not from the manifest,
+         and it composites whatever it finds onto BLACK. The old icon was a
+         near-white mark on a transparent background, so what a shop got when
+         they added TechDesk to their home screen was a black square. This one
+         is opaque, square and full-bleed: iOS rounds the corners itself, and
+         an already-rounded icon shows black in the four corners. -->
+    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="TechDesk" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#0f1115" />
     <meta name="description" content="TechDesk: sales, repairs, inventory and customers for a repair shop. Free to use, in a browser tab." />
     <title>TechDesk</title>
-    <script type="module" crossorigin src="./assets/index-C4mMIqck.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-DSaUjp56.css">
+    <script type="module" crossorigin src="./assets/index-B9sU21UV.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-CZQcUs31.css">
   </head>
   <body>
     <div id="root"></div>
