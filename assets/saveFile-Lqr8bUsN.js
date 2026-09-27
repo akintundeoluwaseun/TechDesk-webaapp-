@@ -1,4 +1,4 @@
-import{z as c,A as u,D as p}from"./index-KYpCNl64.js";function l(){const e=p();if(e==="electron")return c;if(e==="capacitor")throw new Error("Running under Capacitor with no platform adapter registered. The mobile entry point must call setPlatform(capacitorAdapter).");return u}let t=null,i=null;const f=`
+import{z as c,A as u,D as p}from"./index-CN6lgWJc.js";function l(){const e=p();if(e==="electron")return c;if(e==="capacitor")throw new Error("Running under Capacitor with no platform adapter registered. The mobile entry point must call setPlatform(capacitorAdapter).");return u}let t=null,i=null;const f=`
   position: fixed;
   left: 50%;
   bottom: calc(76px + env(safe-area-inset-bottom));
