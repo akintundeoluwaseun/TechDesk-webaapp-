@@ -36,3 +36,15 @@ self.addEventListener("fetch", (e) => {
       .catch(() => caches.match(e.request).then((hit) => hit || caches.match("./index.html")))
   );
 });
+
+// Tapping a TechDesk notification brings the app forward -- the open tab if
+// there is one, a new one if not -- rather than doing nothing.
+self.addEventListener("notificationclick", (e) => {
+  e.notification.close();
+  e.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((tabs) => {
+      const open = tabs.find((t) => "focus" in t);
+      return open ? open.focus() : self.clients.openWindow("./");
+    })
+  );
+});
