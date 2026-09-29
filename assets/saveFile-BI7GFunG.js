@@ -1,3 +1,0 @@
-import{y as n,t as c}from"./index-B2BtJMGC.js";async function l(r,a,{share:e=!1}={}){const o=n();try{const t=e?await o.shareFile(r,a):await o.saveFile(r,a);return!e&&t.folder&&c(`Saved to ${t.folder}`),t}catch(t){const s=String((t==null?void 0:t.message)||t);if(/cancel/i.test(s))return{ok:!0,via:"cancelled"};try{window.alert(`Couldn't save ${a}.
-
-${s}`)}catch{}return{ok:!1,error:s}}}function u(r,a){return l(r.output("blob"),a)}async function f(r,a){try{return await n().openFile(r.output("blob"),a)}catch(e){return{ok:!1,error:String((e==null?void 0:e.message)||e)}}}export{l as a,f as p,u as s};
