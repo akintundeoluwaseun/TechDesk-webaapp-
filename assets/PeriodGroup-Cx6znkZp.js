@@ -1,0 +1,6 @@
+import{c as l,u as c,j as a,N as o}from"./index-CzaN12Y2.js";function p(n,i,e=""){const s=String(n||"").replace(/[\\/:*?"<>|]/g," ").replace(/\s+/g," ").trim().slice(0,40),r=String(i||"receipt").trim(),t=e?`-${e}`:"";return s?`${s} - ${r}${t}.pdf`:`${r}${t}.pdf`}/**
+ * @license lucide-react v0.383.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const m=l("FileText",[["path",{d:"M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z",key:"1rqfz7"}],["path",{d:"M14 2v4a2 2 0 0 0 2 2h4",key:"tnqrlb"}],["path",{d:"M10 9H8",key:"b1mrlr"}],["path",{d:"M16 13H8",key:"t4e002"}],["path",{d:"M16 17H8",key:"z1uh3a"}]]);function x({label:n,count:i,open:e,onToggle:s,children:r}){const t=c();return a.jsxs("div",{className:"mb-4",children:[a.jsxs("button",{type:"button",onClick:s,"aria-expanded":e,className:"w-full flex items-center gap-2 px-1 py-2",children:[a.jsx(o,{className:`w-4 h-4 shrink-0 transition-transform ${t.textMuted} ${e?"":"-rotate-90"}`,"aria-hidden":"true"}),a.jsx("span",{className:`text-sm font-semibold ${t.textPrimary}`,children:n}),a.jsx("span",{className:`text-xs font-medium px-2 py-0.5 rounded-full ${t.pillBg}`,children:i})]}),e&&a.jsx("div",{className:"td-open td-stagger flex flex-col gap-3",children:r})]})}export{m as F,x as P,p as r};
