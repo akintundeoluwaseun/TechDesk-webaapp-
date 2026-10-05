@@ -8,7 +8,7 @@
 //
 // So it caches the shell, serves the network first, and falls back to the
 // cache only when the network is gone -- which is the case this exists for.
-const SHELL = "techdesk-shell-v1";
+const SHELL = "techdesk-shell-v2"; // v2: stops keeping copies of other sites' answers
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(SHELL).then((c) => c.addAll(["./", "./index.html"])).then(() => self.skipWaiting()));
@@ -24,6 +24,10 @@ self.addEventListener("activate", (e) => {
 
 self.addEventListener("fetch", (e) => {
   if (e.request.method !== "GET") return;
+  // Only the app's own files. Requests to other sites (the server, the price
+  // lookup) go straight to the network: caching them kept stale answers, and
+  // offline the fallback handed back index.html as if it were their reply.
+  if (new URL(e.request.url).origin !== self.location.origin) return;
   e.respondWith(
     fetch(e.request)
       .then((res) => {
