@@ -1,4 +1,4 @@
-import{c as l,u as c,j as a,V as o}from"./index-CSz_8qew.js";function p(n,i,e=""){const s=String(n||"").replace(/[\\/:*?"<>|]/g," ").replace(/\s+/g," ").trim().slice(0,40),r=String(i||"receipt").trim(),t=e?`-${e}`:"";return s?`${s} - ${r}${t}.pdf`:`${r}${t}.pdf`}/**
+import{c as l,u as c,j as a,Y as o}from"./index-DQJ8vbar.js";function p(n,i,e=""){const s=String(n||"").replace(/[\\/:*?"<>|]/g," ").replace(/\s+/g," ").trim().slice(0,40),r=String(i||"receipt").trim(),t=e?`-${e}`:"";return s?`${s} - ${r}${t}.pdf`:`${r}${t}.pdf`}/**
  * @license lucide-react v0.383.0 - ISC
  *
  * This source code is licensed under the ISC license.
